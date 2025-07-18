@@ -2,7 +2,7 @@ import {BrowserRouter as Router,Routes,Route} from 'react-router-dom'
 import Navbar from './components/Navbar';
 import SignUp from './pages/auth/SignUp';
 import SignIn from './pages/auth/SignIn';
-import LiveAuction from './pages/auction/liveAuction';
+import LiveAuction from './pages/auction/LiveAuction';
 import UserItem from './pages/user/UserItem';
 import AddAuctionItem from './pages/auction/AddAuction';
 
