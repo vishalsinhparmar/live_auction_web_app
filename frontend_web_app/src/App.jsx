@@ -12,7 +12,7 @@ const App = ()=>{
     <Router>
        <Navbar/>
        <Routes>
-              <Route index  element = {<SignUp/>}/>
+              <Route index  element = {<LiveAuction/>}/>
               <Route path='/signUp' element = {<SignUp/>}/>
               <Route path='/login' element = {<SignIn/>}/>
               <Route path='/' element = {<LiveAuction/>}/>
