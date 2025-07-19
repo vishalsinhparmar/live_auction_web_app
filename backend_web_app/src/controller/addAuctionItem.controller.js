@@ -60,26 +60,33 @@ const startAuctionItem = async (req, res) => {
 
 const getUserAuctionItem = async (req, res) => {
   const userId = req?.user?.sub;
-  console.log('get')
+  console.log('Logged-in User ID:', userId);
   try {
-   const cachedData = await redisClient.get(`user:${userId}:auctionItems`);
-   console.log('catchData',cachedData)
+    const cachedData = await redisClient.get(`user:${userId}:auctionItems`);
     if (cachedData) {
+      console.log("Served from Redis cache");
       return sendSuccessMessage(res, "Fetched auctions item (cached)", JSON.parse(cachedData), 200);
     }
-    const userAuctionItem = await AuctionItem.find().sort({createdAt:-1});
 
-    if (!userAuctionItem.length) return sendErrorMessage(res, "No active auctions found", 404);
+    const userAuctionItem = await AuctionItem.find({ createdBy: userId }).sort({ createdAt: -1 });
 
-      await redisClient.set(`user:${userId}:auctionItems`, JSON.stringify(userAuctionItem), {
-      EX: 60 * 5, 
+    if (!userAuctionItem.length) {
+      return sendErrorMessage(res, "No active auctions found", 404);
+    }
+
+    // Cache for 5 minutes
+    await redisClient.set(`user:${userId}:auctionItems`, JSON.stringify(userAuctionItem), {
+      EX: 60 * 5,
     });
+
+    console.log(` DB Response: ${userAuctionItem.length} items for user ${userId}`);
     return sendSuccessMessage(res, "Fetched auctions item", userAuctionItem, 200);
   } catch (err) {
-    console.error("Error in userAuctionItem:", err);
+    console.error(" Error in userAuctionItem:", err);
     return sendErrorMessage(res, "Internal Server Error", 500);
   }
 };
+
 
 const getActiveAuctionItem = async (req, res) => {
   try {
