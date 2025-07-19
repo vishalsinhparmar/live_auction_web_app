@@ -1,5 +1,5 @@
 import axios from "axios";
-const api_url = import.meta.env.API_URL ||'http://localhost:4000/api';
+const api_url = 'https://liveauctionwebapp-production.up.railway.app/api';
 
 const api = axios.create({
      baseURL:api_url

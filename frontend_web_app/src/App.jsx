@@ -6,11 +6,13 @@ import LiveAuction from './pages/auction/LiveAuction';
 import UserItem from './pages/user/UserItem';
 import AddAuctionItem from './pages/auction/AddAuction';
 
+
 const App = ()=>{
    return (
     <Router>
        <Navbar/>
        <Routes>
+              <Route index  element = {<SignUp/>}/>
               <Route path='/signUp' element = {<SignUp/>}/>
               <Route path='/login' element = {<SignIn/>}/>
               <Route path='/' element = {<LiveAuction/>}/>
