@@ -31,7 +31,7 @@ export const setUpsocketEvents = (io) => {
       return;
     }
 
-
+// storing a database for future refrencess
         await Bid.create([{
             userId,
             auctionId,

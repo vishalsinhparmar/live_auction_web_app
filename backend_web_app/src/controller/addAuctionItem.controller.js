@@ -23,6 +23,9 @@ const addAuctionItem = async (req, res) => {
       createdBy: req.user.sub 
     });
 
+    await redisClient.set(`auctionData:${newItem._id}:Data`, JSON.stringify(newItem));
+
+
     sendSuccessMessage(res, "Auction item created", newItem, 201);
   } catch (err) {
     console.error("Error in addAuctionItem:", err);
@@ -50,16 +53,27 @@ const startAuctionItem = async (req, res) => {
 
     sendSuccessMessage(res, "Auction started successfully", auction, 200);
   } catch (err) {
-    console.error("Error in startAuctionItem:", err);
+    console.error("Error in startAuctionItem", err);
     return sendErrorMessage(res, "Internal Server Error", 500);
   }
 };
 
 const getUserAuctionItem = async (req, res) => {
+  const userId = req?.user?.sub;
+  console.log('get')
   try {
+   const cachedData = await redisClient.get(`user:${userId}:auctionItems`);
+   console.log('catchData',cachedData)
+    if (cachedData) {
+      return sendSuccessMessage(res, "Fetched auctions item (cached)", JSON.parse(cachedData), 200);
+    }
     const userAuctionItem = await AuctionItem.find().sort({createdAt:-1});
+
     if (!userAuctionItem.length) return sendErrorMessage(res, "No active auctions found", 404);
 
+      await redisClient.set(`user:${userId}:auctionItems`, JSON.stringify(userAuctionItem), {
+      EX: 60 * 5, 
+    });
     return sendSuccessMessage(res, "Fetched auctions item", userAuctionItem, 200);
   } catch (err) {
     console.error("Error in userAuctionItem:", err);

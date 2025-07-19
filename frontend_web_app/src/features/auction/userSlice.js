@@ -29,7 +29,7 @@ const userItem = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Sign Up
+
       .addCase(userAuctionItemAsync.pending, (state) => {
         state.loading = true;
         state.error.userAuctionItemAsync = null;
