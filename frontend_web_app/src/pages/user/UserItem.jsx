@@ -7,6 +7,7 @@ import {
   resetAuthState,
 } from "../../features/auction/auctionSlice";
 import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
 
 const UserItem = () => {
   const dispatch = useDispatch();
@@ -54,10 +55,14 @@ const UserItem = () => {
   if (loading) {
     return <p className="text-center text-blue-500">Loading your auctions...</p>;
   }
-
-  if (error?.userAuctionItemAsync) {
-    return <p className="text-center text-red-500">{error.userAuctionItemAsync}</p>;
+    if (auctionItemData.length ===0) {
+    return <p className="text-center text-xl py-4 text-red-500">no auction item add<NavLink to='/addAuction' className='text-blue-500 mx-5'>addAuction</NavLink></p>;
   }
+  if (error?.userAuctionItemAsync) {
+    return <p className="text-center  text-red-500">{error.userAuctionItemAsync}</p>;
+  }
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">

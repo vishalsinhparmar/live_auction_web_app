@@ -76,6 +76,12 @@ socket.on("bid-lessthen", (msg) => {
         </p>
       </div>
 
+      <div>
+        <p className="text-slate-500 font-semibold text-lg">
+          Owner: ₹{item?.createdBy?.username}
+        </p>
+      </div>
+
       {item.isActive && (
         <div className="flex gap-2 mt-2">
           <input
