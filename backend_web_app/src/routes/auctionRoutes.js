@@ -6,7 +6,7 @@ import { rateLimittingAuth } from '../middleware/rateLimiter.js';
 const auctionRoutes = express.Router();
 
 auctionRoutes.post('/addAuctionItem',verifyUser,rateLimittingAuth,upload.single('image'),addAuctionItem);
-auctionRoutes.patch('/startAuction',verifyUser,rateLimittingAuth,startAuctionItem);
+auctionRoutes.patch('/startAuction',verifyUser,startAuctionItem);
 auctionRoutes.get('/liveAuction',verifyUser,getActiveAuctionItem);
 auctionRoutes.get('/auctionItem',verifyUser,getUserAuctionItem);
 

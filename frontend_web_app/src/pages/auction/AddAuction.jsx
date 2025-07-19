@@ -45,7 +45,6 @@ const AddAuctionItem = () => {
         formData.append("image", file);
       }
      console.log('message',message);
-     dispatch(addAuctionItemDataAsync(formData));
      const result = await dispatch(addAuctionItemDataAsync(formData));
 
     if (result.payload?.success) {

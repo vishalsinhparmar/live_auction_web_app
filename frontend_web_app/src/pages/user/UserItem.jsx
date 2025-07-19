@@ -47,7 +47,8 @@ const UserItem = () => {
 
   const handleClick = (id) => {
     setSelectedAuctionId(id);
-    dispatch(startAuctionDataAsync({ auctionItemId: id }));
+    const form = { auctionItemId: id }
+    dispatch(startAuctionDataAsync(form));
   };
 
   if (loading) {

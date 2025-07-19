@@ -1,5 +1,5 @@
 import axios from "axios";
-const api_url = 'https://liveauctionwebapp-production.up.railway.app/api';
+const api_url = 'http://localhost:4000/api';
 
 const api = axios.create({
      baseURL:api_url
@@ -49,8 +49,9 @@ const addAuctionitemAsync = async (form)=>{
 
 
 const startAuctionAsync  = async (form)=>{
+     console.log('form',form)
      const resData = await api.patch('/auction/startAuction',form)
-     console.log("res Data from login",resData)
+     console.log("start auction response",resData)
      return resData.data;
 };
 

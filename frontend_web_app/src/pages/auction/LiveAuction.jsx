@@ -1,10 +1,11 @@
 // pages/LiveAuction.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { liveAuctionData } from "../../features/auction/auctionSlice";
+import { liveAuctionData} from "../../features/auction/auctionSlice";
 import AuctionCard from "../../components/AuctionCard";
 import { toast } from "react-toastify";
 import { NavLink, useNavigate } from "react-router-dom";
+
 
 const LiveAuction = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,7 @@ const LiveAuction = () => {
   useEffect(() => {
 
       dispatch(liveAuctionData());
-     
+    //  dispatch(resetLIveAuction());
     }, [dispatch, user, navigate]);
   if(!user){
      return <p className="text-center text-red-500">please login first<NavLink to='/login' className='text-blue-500 mx-2'>Login</NavLink></p>
