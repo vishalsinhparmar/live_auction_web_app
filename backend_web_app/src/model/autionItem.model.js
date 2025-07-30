@@ -1,3 +1,4 @@
+// models/auctionItem.model.js
 import mongoose from "mongoose";
 
 const auctionItemSchema = new mongoose.Schema({
@@ -29,6 +30,14 @@ const auctionItemSchema = new mongoose.Schema({
     default: 0
   },
   createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  originalOwner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  ownerId: {  // New field to track current ownership
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },

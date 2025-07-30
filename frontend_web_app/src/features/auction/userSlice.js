@@ -1,10 +1,12 @@
 
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { userAuctionItem } from "../../services/services";
+import { userAuctionItem, userWonAuctionItem } from "../../services/services";
 
 
 // Thunks
 export const userAuctionItemAsync = createAsyncThunk('userItem/userAuctionItem',userAuctionItem );
+export const userWonAuctionItemAsync = createAsyncThunk('userItem/userWonAuctionItem',userWonAuctionItem );
+
 
 
 // console.log('userAuctionItem',userAuctionItemAsync);
@@ -14,11 +16,15 @@ const userItem = createSlice({
   initialState: {
     loading: null,
     auctionItemData: [],
+    userWonItems: [],
     error: {
       userAuctionItemAsync: null,
+      userAuctionWonItemAsync: null,
+
     },
     message: {
       userAuctionItemAsync: null,
+      userAuctionWonItemAsync:null
     }
   },
   reducers: {
@@ -47,6 +53,26 @@ const userItem = createSlice({
       .addCase(userAuctionItemAsync.rejected, (state, action) => {
         state.loading = false;
         state.error.userAuctionItemAsync = action.error.message;
+      })      
+      // userAuctionWon
+      .addCase(userWonAuctionItemAsync.pending, (state) => {
+        state.loading = true;
+        state.error.userAuctionWonItemAsync = null;
+        state.message.userAuctionWonItemAsync = null;
+      })
+       .addCase(userWonAuctionItemAsync.fulfilled, (state, action) => {
+          state.loading = false;
+          if (action.payload?.success) {
+          state.message.userAuctionWonItemAsync = action.payload.message;
+         state.userWonItems = action.payload.data;   // ✅ Store separately
+        } else {
+       state.error.userAuctionWonItemAsync = action.payload?.message;
+    }
+     })
+
+      .addCase(userWonAuctionItemAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error.userAuctionWonItemAsync = action.error.message;
       })
 
   }

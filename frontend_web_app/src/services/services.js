@@ -67,6 +67,12 @@ const userAuctionItem = async ()=>{
      return resData.data;
 };
 
+const userWonAuctionItem = async ()=>{
+     const resData = await api.get('/auction/won-auctions')
+     console.log("userAuctionData",resData)
+     return resData.data;
+};
+
 
 export {
      userSignUp,
@@ -75,5 +81,6 @@ export {
      addAuctionitemAsync,
      liveAuctionAsync,
      startAuctionAsync,
-     userAuctionItem
+     userAuctionItem,
+     userWonAuctionItem
 }

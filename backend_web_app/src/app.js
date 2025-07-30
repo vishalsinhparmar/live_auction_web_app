@@ -12,15 +12,22 @@ import auctionRoutes from './routes/auctionRoutes.js';
 import bidRoutes from './routes/bidRoutes.js';
 
 const app = express();
+
 app.use(cors());
+
 dbConnection();
 redisConnection();
+
+
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+
+// testRoutes
 app.get('/',(req,res)=>{
     res.send('server is running')
 });
 
+//route middleware
 app.use('/api/auth',userRoutes);
 app.use('/api/auction',auctionRoutes);
 app.use('/api/bid',bidRoutes);

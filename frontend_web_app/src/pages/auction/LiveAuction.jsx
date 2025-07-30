@@ -1,32 +1,46 @@
 // pages/LiveAuction.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { liveAuctionData} from "../../features/auction/auctionSlice";
+import { liveAuctionData } from "../../features/auction/auctionSlice";
 import AuctionCard from "../../components/AuctionCard";
-import { toast } from "react-toastify";
-import { NavLink, useNavigate } from "react-router-dom";
-
+import { NavLink } from "react-router-dom";
 
 const LiveAuction = () => {
   const dispatch = useDispatch();
   const { loading, auctionItem } = useSelector((state) => state.auction);
-  const {user } = useSelector((state) => state.auth); 
-  const navigate = useNavigate();
-  useEffect(() => {
+  const { user } = useSelector((state) => state.auth);
 
-      dispatch(liveAuctionData());
-    //  dispatch(resetLIveAuction());
-    }, [dispatch, user, navigate]);
-  if(!user){
-     return <p className="text-center text-red-500">please login first<NavLink to='/login' className='text-blue-500 mx-2'>Login</NavLink></p>
+  useEffect(() => {
+    dispatch(liveAuctionData());
+  }, [dispatch]);
+
+  if (!user) {
+    return (
+      <div className="text-center mt-10 text-lg text-gray-700">
+        Please login to view live auctions.
+        <NavLink to="/login" className="text-blue-600 ml-2 underline">
+          Login
+        </NavLink>
+      </div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+    <div className="px-4 py-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold text-center mb-6 text-blue-700">Live Auctions</h1>
       {loading ? (
-        <p>Loading...</p>
+        <div className="text-center text-gray-500 text-lg">Loading auctions...</div>
+      ) : auctionItem && auctionItem.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {auctionItem.map((item) => (
+             <AuctionCard key={item._id} item={item} currentUser={user} />
+              ))}
+
+        </div>
       ) : (
-        auctionItem?.map((item) => <AuctionCard key={item._id} item={item} />)
+        <div className="text-center text-gray-500 text-lg mt-20">
+          🕑 No live auction items found at the moment.
+        </div>
       )}
     </div>
   );

@@ -12,7 +12,7 @@ export const verifyUser = async(req,res,next)=>{
          };
          jwt.verify(token,process.env.JWT_SECRET,(err,data)=>{
             if(err){
-                return sendErrorMessage(res,"internal server error",500)
+                return sendErrorMessage(res,"user have not valid token",500)
             }else{
                 req.user = data
                 next();

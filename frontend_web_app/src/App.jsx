@@ -5,6 +5,7 @@ import SignIn from './pages/auth/SignIn';
 import LiveAuction from './pages/auction/LiveAuction';
 import UserItem from './pages/user/UserItem';
 import AddAuctionItem from './pages/auction/AddAuction';
+import UserAcutionWon from './pages/user/UserAuctionWon';
 
 
 const App = ()=>{
@@ -18,6 +19,8 @@ const App = ()=>{
               <Route path='/' element = {<LiveAuction/>}/>
               <Route path='/user' element = {<UserItem/>}/>
               <Route path='/addAuction' element = {<AddAuctionItem/>}/>
+              <Route path='/won_Auction' element = {<UserAcutionWon/>}/>
+
 
        </Routes>
     </Router>
