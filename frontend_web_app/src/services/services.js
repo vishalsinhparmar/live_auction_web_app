@@ -16,7 +16,23 @@ api.interceptors.request.use((config)=>{
      }catch(err){
          console.log("error happen in this interceptor request",err.message)
      }
-})
+},
+   (error)=>{
+        return Promise.reject(error);
+   }
+);
+
+api.interceptors.response.use(
+     (response)=>response,
+     (error)=>{
+          if(error.response){
+                 if(error.response.status===401){
+                    console.warn('Unotherized,rediret to login!')
+                 }
+          }
+          return Promise.reject(error);
+     }
+)
 // userSignUp
 const userSignUp = async (form)=>{
      const resData = await api.post('/auth/signUp ',form);
@@ -61,11 +77,20 @@ const liveAuctionAsync  = async ()=>{
      return resData.data;
 };
 
+const fetchBidData  = async (id)=>{
+     console.log('live',id)
+     const resData = await api.get(`/bid/bidItem/${id}`)
+     console.log("res.data of the live bid",resData)
+     return resData.data;
+};
+
 const userAuctionItem = async ()=>{
      const resData = await api.get('/auction/auctionItem')
      console.log("res auctionUseritem auction",resData)
      return resData.data;
 };
+
+
 
 const userWonAuctionItem = async ()=>{
      const resData = await api.get('/auction/won-auctions')
@@ -82,5 +107,6 @@ export {
      liveAuctionAsync,
      startAuctionAsync,
      userAuctionItem,
-     userWonAuctionItem
+     userWonAuctionItem,
+     fetchBidData
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { socket } from "../utils/socket";
+import { fetchBidData } from "../services/services";
 
 const AuctionCard = ({ item, currentUser }) => {
   const [bidAmount, setBidAmount] = useState("");
@@ -54,8 +55,8 @@ const AuctionCard = ({ item, currentUser }) => {
 
   const fetchBidHistory = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:4000/api/bid/bidItem/${item._id}`);
-      setBids(data?.data || []);
+      const { data } = await fetchBidData(item?._id)
+      setBids(data || []);
     } catch {
       toast.error("Failed to fetch bid history");
     }
@@ -75,7 +76,7 @@ const AuctionCard = ({ item, currentUser }) => {
   };
 
   const isWinner = item.winnerId?._id === currentUser?._id;
-
+  console.log('isWinner',isWinner);
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition">
       <img
@@ -148,19 +149,46 @@ const AuctionCard = ({ item, currentUser }) => {
         {/* Recent Bids */}
         <div className="mt-4">
           <h4 className="text-sm font-semibold mb-1">Recent Bids</h4>
-          <ul className="text-sm text-gray-700 space-y-1 max-h-28 overflow-y-auto border-t pt-2">
-            {bids.length > 0 ? (
-              bids.map((bid, i) => (
-                <li key={i} className="border-b pb-1">
-                  ₹{bid.amount} by{" "}
-                  <span className="font-medium">{bid.username || bid.userId}</span> @{" "}
-                  {new Date(bid.time).toLocaleTimeString()}
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-400 italic">No bids yet</li>
-            )}
-          </ul>
+<ul className="text-sm text-gray-700 space-y-1 max-h-28 overflow-y-auto border-t pt-2">
+  {bids.length > 0 ? (
+    bids.map((bid, i) => (
+      <li
+        key={i}
+        className={`border-b pb-1 ${i === 0 ? "bg-green-100 font-semibold text-green-800 rounded px-2" : ""}`}
+      >
+        ₹{bid.amount} by{" "}
+        <span className="font-medium">{bid.username || bid.userId}</span> @{" "}
+        {new Date(bid.time).toLocaleTimeString()}
+        {i === 0 && item.isActive && (
+          <span className="ml-2 text-xs text-green-700"> (Highest Bid)</span>
+        )}
+        {i === 0 && !item.isActive && (
+          <span className="ml-2 text-xs text-blue-700"> (Winning Bid)</span>
+        )}
+      </li>
+    ))
+  ) : (
+    <li className="text-gray-400 italic">No bids yet</li>
+  )}
+</ul>
+
+{/* Winner Display */}
+{!item.isActive && item.winnerId && (
+  <div className="p-2 mt-2 rounded bg-yellow-100 border border-yellow-300">
+    <p className="text-md text-gray-700">
+      Winner:{" "}
+      <span className="font-bold text-green-700">
+        {item.winnerId?.username}
+      </span>{" "}
+      with ₹{bids[0]?.amount}
+    </p>
+    {isWinner && (
+      <p className="text-sm text-green-600 font-semibold">🎉 Congratulations! You won this auction.</p>
+    )}
+  </div>
+)}
+
+
         </div>
       </div>
     </div>
