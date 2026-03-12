@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { userWonAuctionItemAsync } from "../../features/auction/userSlice";
-import { toast } from "react-toastify";
 
 const UserWonAuction = () => {
   const dispatch = useDispatch();
@@ -25,11 +24,11 @@ const UserWonAuction = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <h2 className="text-xl font-bold text-center text-blue-700 mb-6">🏆 Auctions You Won</h2>
+      <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">🏆 Auctions You Won</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {userWonItems.map((item) => (
-          <div key={item._id} className="bg-white shadow-md p-4 rounded-lg">
-            <img src={item.filepath} className="w-full h-48 object-cover rounded" />
+          <div key={item._id} className="bg-white shadow-sm p-4 rounded-xl border border-gray-100">
+            <img src={item.filepath} alt={item.title} className="w-full h-48 object-cover rounded" />
             <h3 className="text-lg font-semibold mt-2">{item.title}</h3>
             <p className="text-sm text-gray-600">{item.description}</p>
             <p className="mt-2 text-green-600 font-bold">You won for ₹{item.currentPrice}</p>

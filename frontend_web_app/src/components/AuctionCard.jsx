@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
 import { socket } from "../utils/socket";
 import { fetchBidData } from "../services/services";
 
@@ -9,26 +8,41 @@ const AuctionCard = ({ item, currentUser }) => {
   const [bids, setBids] = useState([]);
   const [timeLeft, setTimeLeft] = useState(null);
 
+  const isWinner = useMemo(() => item.winnerId?._id === currentUser?._id, [item, currentUser]);
+
+  const fetchBidHistory = useCallback(async () => {
+    try {
+      const { data } = await fetchBidData(item._id);
+      setBids(data || []);
+    } catch {
+      toast.error(`Failed to fetch bid history for ${item.title}`);
+    }
+  }, [item._id, item.title]);
+
   useEffect(() => {
     socket.emit("join-auction", item._id);
     fetchBidHistory();
 
-    socket.on("new-bid", (data) => {
+    const handleNewBid = (data) => {
       if (data.auctionId === item._id) {
         setBids((prev) => [data, ...prev]);
         toast.success(`New bid on ${item.title}: ₹${data.amount}`);
       }
-    });
+    };
 
-    socket.on("bid-lessthen", (msg) => toast.warning(msg.message));
-    socket.on("bid-rejected", (msg) => toast.error(msg.message));
+    const handleBidLessThan = (msg) => toast.warning(msg.message);
+    const handleBidRejected = (msg) => toast.error(msg.message);
+
+    socket.on("new-bid", handleNewBid);
+    socket.on("bid-lessthen", handleBidLessThan);
+    socket.on("bid-rejected", handleBidRejected);
 
     return () => {
-      socket.off("new-bid");
-      socket.off("bid-lessthen");
-      socket.off("bid-rejected");
+      socket.off("new-bid", handleNewBid);
+      socket.off("bid-lessthen", handleBidLessThan);
+      socket.off("bid-rejected", handleBidRejected);
     };
-  }, [item._id]);
+  }, [fetchBidHistory, item._id, item.title]);
 
   useEffect(() => {
     if (!item.isActive || !item.endTime) return;
@@ -53,18 +67,13 @@ const AuctionCard = ({ item, currentUser }) => {
     return () => clearInterval(interval);
   }, [item.endTime, item.isActive]);
 
-  const fetchBidHistory = async () => {
-    try {
-      const { data } = await fetchBidData(item?._id)
-      setBids(data || []);
-    } catch {
-      toast.error("Failed to fetch bid history");
-    }
-  };
-
   const handleBid = () => {
     const amount = parseFloat(bidAmount);
-    if (!amount || amount <= 0) return toast.warning("Enter a valid bid");
+
+    if (!amount || amount <= 0) {
+      toast.warning("Enter a valid bid");
+      return;
+    }
 
     socket.emit("place-bid", {
       auctionId: item._id,
@@ -75,15 +84,9 @@ const AuctionCard = ({ item, currentUser }) => {
     setBidAmount("");
   };
 
-  const isWinner = item.winnerId?._id === currentUser?._id;
-  console.log('isWinner',isWinner);
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition">
-      <img
-        src={item.filepath || "/no-image.jpg"}
-        alt={item.title}
-        className="w-full h-48 object-cover"
-      />
+    <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition">
+      <img src={item.filepath || "/no-image.jpg"} alt={item.title} className="w-full h-48 object-cover" />
 
       <div className="p-4 space-y-2">
         <h2 className="text-xl font-bold text-gray-800">{item.title}</h2>
@@ -91,9 +94,7 @@ const AuctionCard = ({ item, currentUser }) => {
 
         <div className="flex justify-between text-sm text-gray-600 mt-2">
           <span>Start: ₹{item.startingPrice}</span>
-          <span className="text-orange-500">
-            {item.isActive && timeLeft ? `⏳ ${timeLeft}` : "Ended"}
-          </span>
+          <span className="text-orange-500">{item.isActive && timeLeft ? `⏳ ${timeLeft}` : "Ended"}</span>
           <span
             className={`px-2 py-1 text-white text-xs rounded-full ${
               item.isActive ? "bg-green-500" : "bg-red-500"
@@ -107,7 +108,6 @@ const AuctionCard = ({ item, currentUser }) => {
           Current: ₹{bids[0]?.amount || item.currentPrice || item.startingPrice}
         </div>
 
-        {/* Owner or Winner Display */}
         <div className="text-sm text-gray-700">
           {item.isActive ? (
             <p>Owner: {item?.createdBy?.username}</p>
@@ -116,10 +116,7 @@ const AuctionCard = ({ item, currentUser }) => {
               <p className="text-green-600 font-semibold">🏆 You won this auction!</p>
             ) : (
               <p>
-                Winner:{" "}
-                <span className="font-medium text-gray-800">
-                  {item.winnerId?.username}
-                </span>
+                Winner: <span className="font-medium text-gray-800">{item.winnerId?.username}</span>
               </p>
             )
           ) : (
@@ -127,7 +124,6 @@ const AuctionCard = ({ item, currentUser }) => {
           )}
         </div>
 
-        {/* Bidding Input */}
         {item.isActive && (
           <div className="flex gap-2 mt-3">
             <input
@@ -135,60 +131,47 @@ const AuctionCard = ({ item, currentUser }) => {
               value={bidAmount}
               onChange={(e) => setBidAmount(e.target.value)}
               placeholder="Your bid"
-              className="border border-gray-300 rounded px-3 py-1 w-full focus:outline-none"
+              className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
-            <button
-              onClick={handleBid}
-              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-            >
+            <button onClick={handleBid} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Bid
             </button>
           </div>
         )}
 
-        {/* Recent Bids */}
         <div className="mt-4">
           <h4 className="text-sm font-semibold mb-1">Recent Bids</h4>
-<ul className="text-sm text-gray-700 space-y-1 max-h-28 overflow-y-auto border-t pt-2">
-  {bids.length > 0 ? (
-    bids.map((bid, i) => (
-      <li
-        key={i}
-        className={`border-b pb-1 ${i === 0 ? "bg-green-100 font-semibold text-green-800 rounded px-2" : ""}`}
-      >
-        ₹{bid.amount} by{" "}
-        <span className="font-medium">{bid.username || bid.userId}</span> @{" "}
-        {new Date(bid.time).toLocaleTimeString()}
-        {i === 0 && item.isActive && (
-          <span className="ml-2 text-xs text-green-700"> (Highest Bid)</span>
-        )}
-        {i === 0 && !item.isActive && (
-          <span className="ml-2 text-xs text-blue-700"> (Winning Bid)</span>
-        )}
-      </li>
-    ))
-  ) : (
-    <li className="text-gray-400 italic">No bids yet</li>
-  )}
-</ul>
+          <ul className="text-sm text-gray-700 space-y-1 max-h-28 overflow-y-auto border-t pt-2">
+            {bids.length > 0 ? (
+              bids.map((bid, i) => (
+                <li
+                  key={`${bid.userId}-${bid.amount}-${bid.time}-${i}`}
+                  className={`border-b pb-1 ${
+                    i === 0 ? "bg-green-100 font-semibold text-green-800 rounded px-2" : ""
+                  }`}
+                >
+                  ₹{bid.amount} by <span className="font-medium">{bid.username || bid.userId}</span> @{" "}
+                  {new Date(bid.time).toLocaleTimeString()}
+                  {i === 0 && item.isActive && <span className="ml-2 text-xs text-green-700">(Highest Bid)</span>}
+                  {i === 0 && !item.isActive && <span className="ml-2 text-xs text-blue-700">(Winning Bid)</span>}
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-400 italic">No bids yet</li>
+            )}
+          </ul>
 
-{/* Winner Display */}
-{!item.isActive && item.winnerId && (
-  <div className="p-2 mt-2 rounded bg-yellow-100 border border-yellow-300">
-    <p className="text-md text-gray-700">
-      Winner:{" "}
-      <span className="font-bold text-green-700">
-        {item.winnerId?.username}
-      </span>{" "}
-      with ₹{bids[0]?.amount}
-    </p>
-    {isWinner && (
-      <p className="text-sm text-green-600 font-semibold">🎉 Congratulations! You won this auction.</p>
-    )}
-  </div>
-)}
-
-
+          {!item.isActive && item.winnerId && (
+            <div className="p-2 mt-2 rounded bg-yellow-100 border border-yellow-300">
+              <p className="text-md text-gray-700">
+                Winner: <span className="font-bold text-green-700">{item.winnerId?.username}</span> with ₹
+                {bids[0]?.amount || item.currentPrice}
+              </p>
+              {isWinner && (
+                <p className="text-sm text-green-600 font-semibold">🎉 Congratulations! You won this auction.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

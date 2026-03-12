@@ -9,7 +9,7 @@ const UserSignUp = async(req,res)=>{
     // console.log('req.body',req.body)
   
      try{
-        if(!username && !email && !password){
+        if(!username || !email || !password){
             return sendErrorMessage(res,"bad request ! user have not provide a valid credentials",400)
        }
        const user = await User.findOne({
@@ -31,7 +31,7 @@ const UserSignUp = async(req,res)=>{
        if(!newUser){
          return sendErrorMessage(res,"internal server error",500)
        }
-       sendSuccessMessage(res,'user have register successfully',201)
+       sendSuccessMessage(res,'user have register successfully',null,201)
       console.log('newUser',newUser)
      }catch(err){
          console.log('internal server error',err.message)
@@ -44,7 +44,7 @@ const UserSignIn = async(req,res)=>{
     console.log('req.body',req.body)
   
      try{
-        if(!email && !password){
+        if(!email || !password){
             return sendErrorMessage(res,"bad request ! user have not provide a valid credentials",400)
        }
        const user = await User.findOne({
