@@ -9,7 +9,7 @@ const UserSignUp = async(req,res)=>{
     // console.log('req.body',req.body)
   
      try{
-        if(!username && !email && !password){
+        if(!username || !email || !password){
             return sendErrorMessage(res,"bad request ! user have not provide a valid credentials",400)
        }
        const user = await User.findOne({
@@ -44,7 +44,7 @@ const UserSignIn = async(req,res)=>{
     console.log('req.body',req.body)
   
      try{
-        if(!email && !password){
+        if(!email || !password){
             return sendErrorMessage(res,"bad request ! user have not provide a valid credentials",400)
        }
        const user = await User.findOne({
