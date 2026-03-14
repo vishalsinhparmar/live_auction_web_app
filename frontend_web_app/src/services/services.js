@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const api_url = "https://liveauctionwebapp-production.up.railway.app/api";
+const api_url = "http://localhost:4000/api";
 
 const api = axios.create({
   baseURL: api_url,
@@ -65,33 +65,75 @@ const loginUserData = async () => {
 };
 
 const addAuctionitemAsync = async (form) => {
-  const resData = await api.post("/auction/addAuctionItem", form);
-  return resData.data;
+  try {
+    const resData = await api.post("/auction/addAuctionItem", form);
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to create auction item."));
+  }
+};
+
+const updateAuctionItemAsync = async ({ auctionItemId, formData }) => {
+  try {
+    const resData = await api.put(`/auction/auctionItem/${auctionItemId}`, formData);
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to update auction item."));
+  }
+};
+
+const deleteAuctionItemAsync = async (auctionItemId) => {
+  try {
+    const resData = await api.delete(`/auction/auctionItem/${auctionItemId}`);
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to delete auction item."));
+  }
 };
 
 const startAuctionAsync = async (form) => {
-  const resData = await api.patch("/auction/startAuction", form);
-  return resData.data;
+  try {
+    const resData = await api.patch("/auction/startAuction", form);
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to start auction."));
+  }
 };
 
 const liveAuctionAsync = async () => {
-  const resData = await api.get("/auction/liveAuction");
-  return resData.data;
+  try {
+    const resData = await api.get("/auction/liveAuction");
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to fetch live auctions."));
+  }
 };
 
 const fetchBidData = async (id) => {
-  const resData = await api.get(`/bid/bidItem/${id}`);
-  return resData.data;
+  try {
+    const resData = await api.get(`/bid/bidItem/${id}`);
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to fetch bid history."));
+  }
 };
 
 const userAuctionItem = async () => {
-  const resData = await api.get("/auction/auctionItem");
-  return resData.data;
+  try {
+    const resData = await api.get("/auction/auctionItem");
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to fetch your auction items."));
+  }
 };
 
 const userWonAuctionItem = async () => {
-  const resData = await api.get("/auction/won-auctions");
-  return resData.data;
+  try {
+    const resData = await api.get("/auction/won-auctions");
+    return resData.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "Unable to fetch your won auctions."));
+  }
 };
 
 export {
@@ -99,6 +141,8 @@ export {
   userSignIn,
   loginUserData,
   addAuctionitemAsync,
+  updateAuctionItemAsync,
+  deleteAuctionItemAsync,
   liveAuctionAsync,
   startAuctionAsync,
   userAuctionItem,

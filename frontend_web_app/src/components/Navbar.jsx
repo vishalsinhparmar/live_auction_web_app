@@ -3,6 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import { loginUser } from "../features/auth/authSlice";
 
+const links = [
+  { to: "/", label: "Live auctions" },
+  { to: "/addAuction", label: "Create listing" },
+  { to: "/user", label: "Seller desk" },
+  { to: "/won_Auction", label: "Won lots" },
+];
+
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -14,7 +21,7 @@ const Navbar = () => {
     if (token && !user) {
       dispatch(loginUser());
     }
-  }, [token, dispatch, user]);
+  }, [dispatch, token, user]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -22,148 +29,116 @@ const Navbar = () => {
     window.location.reload();
   };
 
-  const getInitial = (name) => {
-    if (!name) return "?";
-    return name.charAt(0).toUpperCase();
-  };
+  const renderLink = ({ to, label }) => (
+    <NavLink
+      key={to}
+      to={to}
+      onClick={() => setIsMenuOpen(false)}
+      className={({ isActive }) =>
+        [
+          "rounded-full px-4 py-2 text-sm font-semibold transition",
+          isActive
+            ? "bg-white text-stone-950 shadow-sm"
+            : "text-stone-600 hover:bg-white/70 hover:text-stone-900",
+        ].join(" ")
+      }
+    >
+      {label}
+    </NavLink>
+  );
 
   return (
-    <nav className="bg-white shadow-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-        {/* Left */}
-        <div className="flex items-center gap-6">
-          <NavLink to="/" className="text-xl font-bold text-blue-600 hover:text-blue-700">
-            🏠 AuctionLive
+    <header className="relative z-10 px-3 pt-3 sm:px-0">
+      <nav className="glass-panel mx-auto flex w-full max-w-[1220px] items-center justify-between rounded-[28px] px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3">
+          <NavLink to="/" className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-stone-950 text-sm font-extrabold uppercase tracking-[0.28em] text-white">
+              AL
+            </div>
+            <div>
+              <p className="headline text-lg font-bold text-stone-950">AuctionLive</p>
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">
+                Curated real-time bidding
+              </p>
+            </div>
           </NavLink>
-          <div className="hidden md:flex gap-4">
-            <NavLink
-              to="/addAuction"
-              className={({ isActive }) =>
-                `text-sm font-medium ${
-                  isActive ? "text-blue-600" : "text-gray-700"
-                } hover:text-blue-700`
-              }
-            >
-              Add Auction
-            </NavLink>
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `text-sm font-medium ${
-                  isActive ? "text-blue-600" : "text-gray-700"
-                } hover:text-blue-700`
-              }
-            >
-              Live Auctions
-            </NavLink>
-                      <NavLink
-            to="/won_Auction"
-            className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-          >
-            Won Auctions
-          </NavLink>
+
+          <div className="ml-6 hidden items-center gap-1 rounded-full bg-stone-900/5 p-1 lg:flex">
+            {links.map(renderLink)}
           </div>
         </div>
 
-        {/* Right */}
-        <div className="flex items-center gap-4">
+        <div className="hidden items-center gap-3 lg:flex">
           {!user ? (
             <>
-              <NavLink
-                to="/signUp"
-                className="text-sm font-medium text-gray-700 hover:text-blue-700"
-              >
-                Sign Up
+              <NavLink to="/signUp" className="secondary-button">
+                Create account
               </NavLink>
-              <NavLink
-                to="/login"
-                className="text-sm font-medium text-gray-700 hover:text-blue-700"
-              >
-                Login
+              <NavLink to="/login" className="primary-button">
+                Sign in
               </NavLink>
             </>
           ) : (
-            <div className="flex items-center gap-4">
+            <>
+              <div className="rounded-full border border-stone-900/10 bg-white/70 px-4 py-2 text-right">
+                <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Signed in</p>
+                <p className="text-sm font-bold text-stone-900">{user.username}</p>
+              </div>
               <NavLink
                 to="/user"
-                className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700"
+                className="grid h-12 w-12 place-items-center rounded-full bg-[var(--accent)] text-sm font-bold text-white"
               >
-                {getInitial(user.username)}
+                {user.username?.charAt(0)?.toUpperCase() || "U"}
               </NavLink>
-              <button
-                onClick={handleLogout}
-                className="text-sm bg-red-500 hover:bg-red-600 text-white py-1.5 px-4 rounded transition"
-              >
+              <button onClick={handleLogout} className="secondary-button">
                 Logout
               </button>
-            </div>
-          )}
-
-          {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden text-gray-700 focus:outline-none"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden px-4 pb-4 space-y-2">
-          <NavLink
-            to="/addAuction"
-            className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-          >
-            Add Auction
-          </NavLink>
-          <NavLink
-            to="/"
-            className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-          >
-            Live Auctions
-          </NavLink>
-          <NavLink
-            to="/won_Auction"
-            className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-          >
-            Won Auctions
-          </NavLink>
-          {!user && (
-            <>
-              <NavLink
-                to="/signUp"
-                className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                Sign Up
-              </NavLink>
-              <NavLink
-                to="/login"
-                className="block text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                Login
-              </NavLink>
             </>
           )}
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="block w-full text-left text-sm font-medium text-red-500 hover:text-red-600"
-            >
-              Logout
-            </button>
-          )}
+        </div>
+
+        <button
+          type="button"
+          className="grid h-11 w-11 place-items-center rounded-2xl border border-stone-900/10 bg-white/70 text-stone-900 lg:hidden"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+        >
+          <span className="space-y-1">
+            <span className="block h-0.5 w-5 bg-current" />
+            <span className="block h-0.5 w-5 bg-current" />
+            <span className="block h-0.5 w-5 bg-current" />
+          </span>
+        </button>
+      </nav>
+
+      {isMenuOpen && (
+        <div className="glass-panel mx-auto mt-3 flex w-full max-w-[1220px] flex-col gap-2 rounded-[24px] px-4 py-4 lg:hidden">
+          {links.map(renderLink)}
+          <div className="mt-2 grid gap-2 border-t border-stone-900/10 pt-3">
+            {!user ? (
+              <>
+                <NavLink to="/signUp" onClick={() => setIsMenuOpen(false)} className="secondary-button">
+                  Create account
+                </NavLink>
+                <NavLink to="/login" onClick={() => setIsMenuOpen(false)} className="primary-button">
+                  Sign in
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <div className="rounded-2xl bg-white/70 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Signed in</p>
+                  <p className="text-base font-bold text-stone-900">{user.username}</p>
+                </div>
+                <button onClick={handleLogout} className="secondary-button">
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 

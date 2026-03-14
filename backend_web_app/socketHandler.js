@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { redisClient } from "./redisClient.js";
-import Bid from "./src/model/bid.model.js";
+import { redisGet, redisSet } from "./redisClient.js";
 import AuctionItem from "./src/model/autionItem.model.js";
+import Bid from "./src/model/bid.model.js";
 
 export const setUpsocketEvents = (io) => {
   io.on("connection", (socket) => {
@@ -9,64 +9,79 @@ export const setUpsocketEvents = (io) => {
 
     socket.on("join-auction", (auctionId) => {
       socket.join(auctionId);
-      console.log(" joined auction room", auctionId);
+      console.log("joined auction room", auctionId);
     });
 
     socket.on("place-bid", async ({ auctionId, userId, amount }) => {
-        const session = await mongoose.startSession();
-         session.startTransaction();
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
       try {
-        const opts = {session};
+        const opts = { session };
         const auction = await AuctionItem.findById(auctionId).session(session);
-        const currentBid = parseFloat(await redisClient.get(`auction:${auctionId}:highestBid`)) || auction.currentPrice ;
 
-    if (amount <= currentBid) {
-      socket.emit("bid-lessthen", {
-        message: ` Bid must be higher than ₹${currentBid}`,
-        currentBid,
-        yourBid: amount,
-      });
-      await session.endSession();
-      return;
-    }
+        if (!auction || !auction.isActive) {
+          socket.emit("bid-rejected", {
+            message: "Auction is not available for bidding",
+          });
+          await session.abortTransaction();
+          session.endSession();
+          return;
+        }
 
-// storing a database for future refrencess
-        await Bid.create([{
-            userId,
-            auctionId,
-            amount,
-            time: new Date()
-        }],opts);
+        const cachedBid = await redisGet(`auction:${auctionId}:highestBid`);
+        const currentBid = Number.parseFloat(cachedBid) || auction.currentPrice;
 
-       auction.currentPrice = amount;
+        if (amount <= currentBid) {
+          socket.emit("bid-lessthen", {
+            message: `Bid must be higher than Rs ${currentBid}`,
+            currentBid,
+            yourBid: amount,
+          });
+          await session.abortTransaction();
+          session.endSession();
+          return;
+        }
+
+        await Bid.create(
+          [
+            {
+              userId,
+              auctionId,
+              amount,
+              time: new Date(),
+            },
+          ],
+          opts
+        );
+
+        auction.currentPrice = amount;
         await auction.save(opts);
-        await redisClient.set(`auction:${auctionId}:highestBid`, amount);
-      
+        await redisSet(`auction:${auctionId}:highestBid`, amount.toString());
+
         await session.commitTransaction();
         session.endSession();
 
-          io.to(auctionId).emit("new-bid", {
-            userId,
-            auctionId,
-            amount,
-            time: new Date(),
-          });
-
+        io.to(auctionId).emit("new-bid", {
+          userId,
+          auctionId,
+          amount,
+          time: new Date(),
+        });
       } catch (err) {
         await session.abortTransaction();
         session.endSession();
 
-        socket.emit('bid-rejected',{
-            message:err.message || "bid failed"
-        })
+        socket.emit("bid-rejected", {
+          message: err.message || "bid failed",
+        });
 
-        console.log(" Something went wrong in place-bid:", err.message);
+        console.log("Something went wrong in place-bid:", err.message);
       }
     });
 
     socket.on("disconnect", () => {
-      console.log(" client disconnected", socket.id);
+      console.log("client disconnected", socket.id);
     });
   });
 };

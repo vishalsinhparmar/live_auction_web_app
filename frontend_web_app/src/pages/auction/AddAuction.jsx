@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import DatePicker from "react-datepicker";
 import { useDispatch, useSelector } from "react-redux";
-import { addAuctionItemDataAsync } from "../../features/auction/auctionSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { addAuctionItemDataAsync } from "../../features/auction/auctionSlice";
 import { validateImageFile } from "../../utils/validateImage";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
 
 const AddAuctionItem = () => {
   const navigate = useNavigate();
@@ -21,20 +20,29 @@ const AddAuctionItem = () => {
     endTime: "",
     startingPrice: "",
   });
-
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleChange = (event) => {
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [event.target.name]: event.target.value,
     }));
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    const validation = validateImageFile(selectedFile, 1); // 1 MB max
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    const validation = validateImageFile(selectedFile, 1);
 
     if (!validation.valid) {
       toast.warning(validation.message);
@@ -45,8 +53,12 @@ const AddAuctionItem = () => {
     setFile(selectedFile);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleRemoveFile = () => {
+    setFile(null);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (!file) {
       toast.error("Please select a valid image before submitting.");
@@ -78,143 +90,172 @@ const AddAuctionItem = () => {
       toast.error("You must be logged in to add auctions");
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [navigate, user]);
 
   return (
-    <div className="relative">
+    <section className="page-grid">
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 bg-white bg-opacity-60 backdrop-blur-sm flex items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-20 w-20"></div>
-            <p className="text-lg text-gray-700 font-semibold">Submitting Auction Item...</p>
+        <div className="overlay">
+          <div className="section-card w-full max-w-sm p-8 text-center">
+            <div className="loading-ring mx-auto" />
+            <p className="mt-5 text-lg font-bold text-stone-950">Publishing your auction lot...</p>
+            <p className="mt-2 text-sm text-stone-600">We are packaging the media, pricing, and schedule.</p>
           </div>
         </div>
       )}
 
-      <div className={`max-w-3xl mx-auto mt-10 bg-white shadow-xl p-8 rounded-lg transition duration-300 ${isSubmitting ? 'blur-sm' : ''}`}>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Add Auction Item</h2>
-        
-        <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
-          {/* Title */}
+      <div className={`page-hero glass-panel transition ${isSubmitting ? "blur-sm" : ""}`}>
+        <div>
+          <span className="eyebrow">Seller studio</span>
+          <h1 className="headline mt-4 text-4xl font-bold text-stone-950 sm:text-5xl">Launch a listing that feels ready for buyers.</h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600">
+            Set an opening price, schedule the sale window, and upload a strong cover image so bidders can evaluate the lot quickly.
+          </p>
+        </div>
+
+        <div className="inventory-stats">
+          <div className="metric-card">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Tip</p>
+            <p className="mt-3 text-lg font-bold text-stone-950">Use short, descriptive titles and precise close times to improve bid confidence.</p>
+          </div>
+          <div className="metric-card">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Image limit</p>
+            <p className="mt-3 text-lg font-bold text-stone-950">The uploaded image must be under 1 MB and optimized for first impression.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={`section-card grid gap-8 p-6 lg:grid-cols-[minmax(0,1.15fr)_360px] lg:p-8 ${isSubmitting ? "blur-sm" : ""}`}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className="grid gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="field-label">Lot title</label>
             <input
               type="text"
               name="title"
               value={form.title}
               onChange={handleChange}
-              placeholder="Enter item title"
-              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Vintage watch, signed print, premium collectible..."
+              className="field-control"
               required
             />
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="field-label">Description</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
-              placeholder="Describe the item"
-              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
+              placeholder="Describe condition, provenance, standout details, and why bidders should care."
+              className="field-control min-h-36"
+              rows={5}
               required
             />
           </div>
 
-          {/* Time Inputs */}
-{/* Start Time */}
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-  <DatePicker
-    selected={form.startTime ? new Date(form.startTime) : null}
-    onChange={(date) =>
-      setForm((prev) => ({
-        ...prev,
-        startTime: date.toISOString(),
-      }))
-    }
-    showTimeSelect
-    timeIntervals={15}
-    dateFormat="Pp"
-    placeholderText="Select start date & time"
-    className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-</div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <label className="field-label">Start time</label>
+              <DatePicker
+                selected={form.startTime ? new Date(form.startTime) : null}
+                onChange={(date) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    startTime: date.toISOString(),
+                  }))
+                }
+                showTimeSelect
+                timeIntervals={15}
+                dateFormat="Pp"
+                placeholderText="Select start date and time"
+                className="field-control"
+              />
+            </div>
 
-{/* End Time */}
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-  <DatePicker
-    selected={form.endTime ? new Date(form.endTime) : null}
-    onChange={(date) =>
-      setForm((prev) => ({
-        ...prev,
-        endTime: date.toISOString(),
-      }))
-    }
-    showTimeSelect
-    timeIntervals={15}
-    dateFormat="Pp"
-    placeholderText="Select end date & time"
-    className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-</div>
+            <div>
+              <label className="field-label">End time</label>
+              <DatePicker
+                selected={form.endTime ? new Date(form.endTime) : null}
+                onChange={(date) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    endTime: date.toISOString(),
+                  }))
+                }
+                showTimeSelect
+                timeIntervals={15}
+                dateFormat="Pp"
+                placeholderText="Select end date and time"
+                className="field-control"
+              />
+            </div>
+          </div>
 
-
-          {/* Starting Price */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Starting Price (₹)</label>
+            <label className="field-label">Opening price</label>
             <input
               type="number"
               name="startingPrice"
               value={form.startingPrice}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="field-control"
+              placeholder="Starting amount in INR"
               required
             />
           </div>
 
-          {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Image</label>
-            <div className="flex items-center gap-4">
-              <label className="cursor-pointer inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                Choose File
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
+            <label className="field-label">Cover image</label>
+            <label className="flex cursor-pointer items-center justify-center rounded-[22px] border border-dashed border-stone-900/20 bg-stone-50/70 px-6 py-8 text-center transition hover:bg-stone-50">
+              <div>
+                <p className="text-base font-bold text-stone-950">{file ? "Replace image" : "Choose image"}</p>
+                <p className="mt-2 text-sm text-stone-500">JPG, PNG, or WebP under 1 MB</p>
+              </div>
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </label>
+          </div>
 
-              {file && (
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt="Preview"
-                  className="w-20 h-20 object-cover rounded border"
-                />
+          <button disabled={loading} type="submit" className="primary-button w-full">
+            {loading ? "Submitting..." : "Publish auction"}
+          </button>
+        </form>
+
+        <aside className="grid gap-4">
+          <div className="rounded-[28px] bg-stone-950 p-4 text-stone-50">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-300">Preview panel</p>
+            <div className="preview-media mt-4">
+              {previewUrl ? (
+                <>
+                  <img src={previewUrl} alt="Auction preview" />
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="absolute right-3 top-3 rounded-full bg-stone-950/80 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white"
+                  >
+                    Remove
+                  </button>
+                </>
+              ) : (
+                <div className="grid h-full min-h-64 place-items-center px-6 text-center text-sm text-stone-300">
+                  Upload a cover image to preview how the listing will appear to bidders.
+                </div>
               )}
+            </div>
+            <div className="mt-4 space-y-3">
+              <h2 className="headline text-2xl font-bold">{form.title || "Your next premium lot"}</h2>
+              <p className="text-sm leading-6 text-stone-300">
+                {form.description || "A concise, credible description helps buyers place stronger bids faster."}
+              </p>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-4">
-            <button
-              disabled={loading}
-              type="submit"
-              className={`w-full py-3 text-white font-semibold rounded transition duration-300 ${
-                loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {loading ? "Submitting..." : "Submit Auction Item"}
-            </button>
+          <div className="metric-card">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Submission state</p>
+            <p className="mt-3 text-lg font-bold text-stone-950">{file ? "Image attached and ready." : "Waiting for listing media."}</p>
           </div>
-        </form>
+        </aside>
       </div>
-    </div>
+    </section>
   );
 };
 
